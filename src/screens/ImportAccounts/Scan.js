@@ -36,6 +36,7 @@ class Scan extends PureComponent<
     progress: number,
     width: number,
     height: number,
+    debugStr: string,
   },
 > {
   static navigationOptions = ({
@@ -57,6 +58,7 @@ class Scan extends PureComponent<
 
   state = {
     progress: 0,
+    debugStr: "",
     ...getDimensions(),
   };
 
@@ -90,7 +92,14 @@ class Scan extends PureComponent<
 
       const { chunksCount } = this.chunks[0];
 
-      this.setState({ progress: this.chunks.length / chunksCount });
+      this.setState({
+        debugStr: Array(chunksCount)
+          .fill(null)
+          .map((_, i) => i)
+          .filter(i => !this.chunks.some(c => c.index === i))
+          .join(" "),
+        progress: this.chunks.length / chunksCount,
+      });
 
       if (areChunksComplete(this.chunks)) {
         this.completed = true;
@@ -112,7 +121,7 @@ class Scan extends PureComponent<
   };
 
   render() {
-    const { progress, width, height } = this.state;
+    const { progress, width, height, debugStr } = this.state;
     const { t, navigation } = this.props;
     const cameraRatio = 16 / 9;
     const cameraDimensions =
@@ -186,6 +195,11 @@ class Scan extends PureComponent<
               <View style={styles.darken} />
             </View>
             <View style={[styles.darken, styles.centered]}>
+              <View style={styles.centered}>
+                <LText semibold style={styles.text}>
+                  {debugStr}
+                </LText>
+              </View>
               <View style={styles.centered}>
                 <LText semibold style={styles.text}>
                   {t("account.import.scan.descBottom")}
