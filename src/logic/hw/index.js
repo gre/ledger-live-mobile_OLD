@@ -59,6 +59,22 @@ openHandlers.push(id => {
   return null;
 });
 
+// Add support of BLE
+// it is always the fallback choice because we always keep raw id in it.
+observables.push(
+  Observable.create(o => BluetoothTransport.listen(o)).pipe(
+    map(({ type, descriptor }) => ({
+      type,
+      id: descriptor.id,
+      name: descriptor.name,
+    })),
+  ),
+);
+openHandlers.push(id =>
+  // $FlowFixMe subtyping god help me
+  BluetoothTransport.open(id),
+);
+
 export const devicesObservable: Observable<{
   type: string,
   id: string,
@@ -72,14 +88,6 @@ export const devicesObservable: Observable<{
       }),
     ),
   ),
-);
-
-// Add support of BLE
-// it is always the fallback choice because we always keep raw id in it.
-// NB: we don't use ble observable because it will be given on ble redux state side
-openHandlers.push(id =>
-  // $FlowFixMe subtyping god help me
-  BluetoothTransport.open(id),
 );
 
 export const open = (deviceId: string): Promise<Transport<*>> => {

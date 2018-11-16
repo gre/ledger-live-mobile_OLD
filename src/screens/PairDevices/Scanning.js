@@ -4,11 +4,10 @@ import React, { Component } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { connect } from "react-redux";
 import { createStructuredSelector } from "reselect";
-import { Observable } from "rxjs";
+import { devicesObservable } from "../../logic/hw";
 import { BLE_SCANNING_NOTHING_TIMEOUT } from "../../constants";
 import { knownDevicesSelector } from "../../reducers/ble";
 import type { DeviceLike } from "../../reducers/ble";
-import TransportBLE from "../../react-native-hw-transport-ble";
 import DeviceItem from "../../components/DeviceItem";
 import ScanningHeader from "./ScanningHeader";
 
@@ -50,17 +49,18 @@ class Scanning extends Component<Props, State> {
   }
 
   startScan = async () => {
-    this.sub = Observable.create(TransportBLE.listen).subscribe({
+    this.sub = devicesObservable.subscribe({
       next: e => {
         if (e.type === "add") {
           clearTimeout(this.timeout);
           const device = e.descriptor;
-          this.setState(({ devices }) => ({
-            // FIXME seems like we have dup. ideally we'll remove them on the listen side!
-            devices: devices.some(i => i.id === device.id)
-              ? devices
-              : devices.concat(device),
-          }));
+          this.setState(({ devices }) => {
+            // FIXME dedup/filter on observable side with some .pipe() ops
+            if (devices.some(i => i.id === device.id)) return null;
+            return {
+              devices: devices.concat(device),
+            };
+          });
         }
       },
       error: error => {

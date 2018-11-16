@@ -3,7 +3,6 @@ import React, { Component, Fragment } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { connect } from "react-redux";
 import { createStructuredSelector } from "reselect";
-import { devicesObservable } from "../../logic/hw";
 import { knownDevicesSelector } from "../../reducers/ble";
 import { removeKnownDevice } from "../../actions/ble";
 import DeviceItem from "../DeviceItem";
@@ -26,12 +25,6 @@ class SelectDevice extends Component<
     onStepEntered?: (number, Object) => void,
   },
   {
-    devices: Array<{
-      id: string,
-      name: string,
-      family: string,
-    }>,
-    scanning: boolean,
     connecting: boolean,
     connectingId: ?string,
   },
@@ -42,35 +35,9 @@ class SelectDevice extends Component<
 
   state = {
     devices: [],
-    scanning: true,
     connecting: false,
     connectingId: null,
   };
-
-  listingSubscription: *;
-
-  componentDidMount() {
-    this.listingSubscription = devicesObservable.subscribe({
-      complete: () => {
-        this.setState({ scanning: false });
-      },
-      next: e =>
-        this.setState(({ devices }) => ({
-          devices:
-            e.type === "add"
-              ? devices.concat({
-                  id: e.id,
-                  name: e.name,
-                  family: e.family,
-                })
-              : devices.filter(d => d.id !== e.id),
-        })),
-    });
-  }
-
-  componentWillUnmount() {
-    this.listingSubscription.unsubscribe();
-  }
 
   onForget = async ({ id }) => {
     this.props.removeKnownDevice(id);
@@ -104,17 +71,14 @@ class SelectDevice extends Component<
 
   render() {
     const { knownDevices, steps, editMode, onStepEntered } = this.props;
-    const { devices, connecting, connectingId } = this.state;
-    const connectingDevice = devices.find(d => d.id === connectingId);
-
-    // $FlowFixMe
-    const data = devices.concat(knownDevices);
+    const { connecting, connectingId } = this.state;
+    const connectingDevice = knownDevices.find(d => d.id === connectingId);
 
     return (
       <Fragment>
         <FlatList
           contentContainerStyle={styles.root}
-          data={data}
+          data={knownDevices}
           renderItem={this.renderItem}
           ListHeaderComponent={Header}
           ListFooterComponent={Footer}
