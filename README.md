@@ -87,11 +87,12 @@ cp .env.staging .env
 
 ### XCode 10
 
-When trying to build with XCode 10 and React Native v0.57.0, you might have issues with third party packages from React Native.  
+When trying to build with XCode 10 and React Native v0.57.x, you might have issues with third party packages from React Native.  
 To solve this issue you must:
 
 ```sh
-./node_modules/react-native/scripts/ios-install-third-party.sh
+cd ./node_modules/react-native
+./scripts/ios-install-third-party.sh
 ```
 
 The build on XCode 10 should work then.
