@@ -22,8 +22,9 @@ const chainSteps = (
 ): Observable<Object> =>
   steps.reduce(
     (meta: Observable<*>, step: Step, i: number) =>
+      // TODO should transform this into a concat()
       meta.pipe(
-        tap(meta => onStepEnter(i, meta)),
+        tap(meta => onStepEnter(i, meta)), // this would be a "step-enter" event instead of an imperative call
         mergeMap(meta =>
           runStep(
             step,
@@ -32,7 +33,7 @@ const chainSteps = (
             onDoneO.pipe(filter(index => index === i)),
           ),
         ),
-        last(),
+        last(), // we should not just take the last() so we can emit over time
       ),
     from([{}]),
   );
@@ -130,7 +131,12 @@ class DeviceJob extends Component<
       this.onStepEntered,
       this.onDoneSubject,
     ).subscribe({
+      // we should support more than one events so we can have updates over the stream
+      // we could have many "update" events that trigger a local setState with the accumated meta object
+      // this meta object would be passed to step rendering so we can have more granularity
+      // as well as having the "step entered" being an event itself
       next: meta => {
+        // typically we want to only do this for a "done" event
         this.debouncedSetStepIndex.cancel();
         this.setState({ connecting: false }, () => {
           this.props.onDone(deviceId, meta);

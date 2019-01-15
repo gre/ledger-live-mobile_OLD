@@ -81,6 +81,7 @@ export const dashboard: Step = {
 
 export const genuineCheck: Step = {
   Body: () => (
+    // we would take the meta prop & branch rendering
     <RenderStep
       icon={<DeviceNanoAction screen="validation" action />}
       title={
@@ -92,6 +93,14 @@ export const genuineCheck: Step = {
     />
   ),
   run: (deviceId, meta) =>
+    // we would need to make checkDeviceForManager (and underlying genuineCheck that is on live-common)
+    // emit more than a result event.
+    // we need 3 events:
+    // - allow manager requested
+    // - allow manager accepted
+    // - finished with a result code
+    // NB: if allow manager requested & accepted are very close, we would natively debounce that (on the genuineCheck side impl) so it does not even appear
+    // based on this events, we can be in 3 states: before the allow manager displayed, during the allow manager to accept on device, allow manager is accepted
     withDevice(deviceId)(transport =>
       checkDeviceForManager(transport, meta.deviceInfo),
     ).pipe(
